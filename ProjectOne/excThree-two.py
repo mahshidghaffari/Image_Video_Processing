@@ -64,7 +64,7 @@ inverted_Bilateral = cv2.cvtColor(inverted_Bilateral, cv2.COLOR_GRAY2RGB)
 # Combine the edge image and the binned image
 cartoon_Bilateral = cv2.bitwise_and(inverted_Bilateral, img_bins)
 # Save the image
-# cv2.imwrite('CartoonImage.png', cartoon_Bilateral)
+# cv2.imwrite('assets/CartoonImage.png', cartoon_Bilateral)
 
 plt.figure(figsize=(10,10))
 plt.imshow(cartoon_Bilateral,cmap="gray")

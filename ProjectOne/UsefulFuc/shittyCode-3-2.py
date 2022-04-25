@@ -1,10 +1,8 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
 
 
 # 2. Loading and plotting the original image
-from ProjectOne import unifyColor
 
 img = cv2.imread("assets/3-b.jpg")
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

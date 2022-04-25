@@ -1,7 +1,5 @@
-import math
-
 import cv2;
-import convertor
+from ProjectOne.UsefulFuc import convertor
 import numpy as np
 
 BGRImage = cv2.imread("assets/1-1a.jpg")

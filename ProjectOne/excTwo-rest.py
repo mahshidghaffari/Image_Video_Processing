@@ -1,8 +1,5 @@
-import math
-
 import cv2;
 from matplotlib import pyplot as plt
-import convertor
 import numpy as np
 
 img = cv2.imread("assets/2-lowContrast.png")
