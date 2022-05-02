@@ -6,7 +6,6 @@ def RGB_TO_HSI(img):
 
     with np.errstate(divide='ignore', invalid='ignore'):
 
-        #Load image with 32 bit floats as variable type
         bgr = np.float32(img)/255
 
         #Separate color channels
@@ -14,18 +13,15 @@ def RGB_TO_HSI(img):
         green = bgr[:,:,1]
         red = bgr[:,:,2]
 
-        #Calculate Intensity
         def calc_intensity(red, blue, green):
             return np.divide(blue + green + red, 3)
 
-        #Calculate Saturation
         def calc_saturation(red, blue, green):
             minimum = np.minimum(np.minimum(red, green), blue)
             saturation = 1 - (3 / (red + green + blue + 0.001) * minimum)
 
             return saturation
 
-        #Calculate Hue
         def calc_hue(red, blue, green):
             hue = np.copy(red)
 
@@ -43,6 +39,5 @@ def RGB_TO_HSI(img):
 
             return hue
 
-        #Merge channels into picture and return image
         hsi = cv2.merge((calc_hue(red, blue, green), calc_saturation(red, blue, green), calc_intensity(red, blue, green)))
         return hsi

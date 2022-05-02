@@ -1,20 +1,22 @@
-import cv2;
+import cv2
 from matplotlib import pyplot as plt
 
-img = cv2.imread("assets/2-lowContrast.png")
+imgLowContrast = cv2.imread("assets/2-lowContrast.png")
+imgHighContrast = cv2.imread("assets/2-highContrast.png")
 
-# Question one
-# https://www.geeksforgeeks.org/opencv-python-program-analyze-image-using-histogram/
-
+# Task one
+# show the plotting graph of an image
+cv2.imshow('Original Low contrast image', imgLowContrast)
+cv2.imshow('Original High contrast image', imgHighContrast)
 
 # calculate frequency of pixels in range 0-255
-histg = cv2.calcHist([img], [0], None, [256], [0, 256])
-
-# show the plotting graph of an image
-plt.plot(histg)
-# alternative way to find histogram of an image
-# plt.hist(img.ravel(), 256, [0, 256])
-
+plt.hist(imgHighContrast.ravel(), 256, [0, 256])
+plt.title("High")
 plt.show()
 
-# cv2.imshow('RGB', img)
+plt.hist(imgLowContrast.ravel(), 256, [0, 256])
+plt.title("Low")
+plt.show()
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
