@@ -1,6 +1,7 @@
 import cv2;
 import imageio
 import matplotlib.pyplot as plt
+from PIL import Image, ImageFilter
 
 import numpy as np
 
@@ -8,7 +9,7 @@ import numpy as np
 BGRImage = cv2.imread("asset/bird.jpg")
 RGBImage = cv2.cvtColor(BGRImage, cv2.COLOR_BGR2RGB).astype(np.double)
 grey = cv2.cvtColor(BGRImage, cv2.COLOR_BGR2GRAY).astype(np.double)
-fig, ax = plt.subplots(2, 2, sharex='col', sharey='row')
+fig, ax = plt.subplots(3, 2, sharex='col', sharey='row')
 fig.suptitle('TasK One')
 a = 0.1
 b = 0.09
@@ -64,8 +65,8 @@ blurry_inverse = abs(Gp_inverse_blurry) / 255
 ax[1, 0].set_title("Inverse filtering Blurry")
 ax[1, 0].imshow(blurry_inverse)
 
+# --------------------------------------------------------------------------------
 # Task two:  inverse filtering Blurry image and Noisy
-
 
 G_inverse_blurry_noisy = np.fft.fft2(noise_img)
 G_inverse_blurry_noisy[:, :, 0] = np.divide(noise_img[:, :, 0], H) - np.divide(blueF, H)
@@ -75,5 +76,30 @@ noisy_blurry_inverse = abs(np.fft.ifft2(G_inverse_blurry_noisy)) / 255
 noisy_blurry_inverse = (blurry_inverse * 255).astype(np.uint8)
 ax[1, 1].set_title("Inverse filtering Blurry and Noisy")
 ax[1, 1].imshow(noisy_blurry_inverse)
-#
+
+# --------------------------------------------------------------------------------
+# Task two:  MMSE Filter
+
+Hp2 = H * np.conj(H)
+test = Gp * np.conj(Gp)
+Sn = gaus_noise * np.conj(gaus_noise)
+Sf = F + np.conj(F)
+
+one = np.multiply(H, Hp2)
+G3 = F
+G3[:, :, 0] = np.multiply(blueF, one)
+G3[:, :, 1] = np.multiply(greenF, one)
+G3[:, :, 2] = np.multiply(redF, one)
+one = np.fft.ifft2(G3)
+two = np.divide(Sn, Sf)
+print(one.shape)
+print(two.shape)
+print(test.shape)
+
+Hw = np.divide(Gp * np.conj(Gp), one + 0)
+Hw = np.abs(np.fft.ifft2(Hw)) / 255
+
+ax[2, 0].set_title("MMSE Filter")
+ax[2, 0].imshow(Hw)
+
 plt.show()
