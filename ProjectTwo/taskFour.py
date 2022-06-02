@@ -40,7 +40,7 @@ for pic in glob.glob("asset/faces/3/*.jpg"):
 
 # getting image differences
 
-var_one_some = [var_one[0], var_one[1]]
+
 # Task 4.1 -  Find the eigen faces for each image
 # convert all image to row
 data_a = np.matrix([img.flatten() for img in var_one])
@@ -71,10 +71,10 @@ cv2.imshow("Task 4.2 => Image 3", newFace_c.reshape((960, 1280, 3)))
 
 
 # Task 4.3 Reconstruct each face using ’wrong’ PCA weights:
-ws_diff = getWeights(data_a, eigVec_b, mean_a)
+ws_diff = getWeights(data_b, eigVec_b, mean_a)
 newFace_diff = getEigFace(eigVec_b, ws_diff, mean_a)
 img = newFace_diff.reshape(1280, 853, 3)
-cv2.imshow("Image diff", newFace_c.reshape((960, 1280, 3)))
+cv2.imshow("Task 4.3 => Image diff", newFace_c.reshape((960, 1280, 3)))
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
