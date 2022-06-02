@@ -11,17 +11,17 @@ RGBImage = cv2.cvtColor(BGRImage, cv2.COLOR_BGR2RGB).astype(np.double)
 grey = cv2.cvtColor(BGRImage, cv2.COLOR_BGR2GRAY).astype(np.double)
 fig, ax = plt.subplots(3, 2, sharex='col', sharey='row')
 fig.suptitle('TasK One')
-a = 0.1
-b = 0.09
+a = 0.08
+b = 0.08
 
 # Degrading the image and adding noise:
 # --------------------------------------------------------------------------------
 # Task One:  motion blurring
+F = np.fft.fft2(RGBImage)
 n2, n1 = BGRImage.shape[:2]
 [u, v] = np.mgrid[-n2 / 2:n2 / 2, -n1 / 2:n1 / 2]
 u = 2 * u / n2
 v = 2 * v / n1
-F = np.fft.fft2(RGBImage)
 blueF = F[:, :, 0]
 greenF = F[:, :, 1]
 redF = F[:, :, 2]
@@ -32,6 +32,7 @@ G[:, :, 0] = np.multiply(blueF, H)
 G[:, :, 1] = np.multiply(greenF, H)
 G[:, :, 2] = np.multiply(redF, H)
 Gp = np.fft.ifft2(G)
+# Gp = np.fft.fftshift(np.fft.fft2(Gp)) comment email
 blurry = abs(Gp) / 255
 
 # --------------------------------------------------------------------------------
@@ -80,6 +81,15 @@ ax[1, 1].imshow(noisy_blurry_inverse)
 # --------------------------------------------------------------------------------
 # Task two:  MMSE Filter
 
+def add_gaussian_noise(image, mean=0, std=1):
+    gaus_noise = np.random.normal(mean, std, image.shape)
+    image = image.astype("int16")
+    noise_img = image + gaus_noise
+    return noise_img
+
+
+
+
 Hp2 = H * np.conj(H)
 test = Gp * np.conj(Gp)
 Sn = gaus_noise * np.conj(gaus_noise)
@@ -90,16 +100,23 @@ G3 = F
 G3[:, :, 0] = np.multiply(blueF, one)
 G3[:, :, 1] = np.multiply(greenF, one)
 G3[:, :, 2] = np.multiply(redF, one)
+
 one = np.fft.ifft2(G3)
 two = np.divide(Sn, Sf)
-print(one.shape)
-print(two.shape)
-print(test.shape)
+
 
 Hw = np.divide(Gp * np.conj(Gp), one + 0)
 Hw = np.abs(np.fft.ifft2(Hw)) / 255
 
 ax[2, 0].set_title("MMSE Filter")
-ax[2, 0].imshow(Hw)
+ax[2, 0].imshow(add_gaussian_noise(RGBImage.astype(np.uint8)))
 
 plt.show()
+
+
+def add_gaussian_noise(image, mean=0, std=1):
+    gaus_noise = np.random.normal(mean, std, image.shape)
+    image = image.astype("int16")
+    noise_img = image + gaus_noise
+    # image = ceil_floor_image(image)
+    return noise_img
