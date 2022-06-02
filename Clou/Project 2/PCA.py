@@ -73,9 +73,9 @@ dF3 = getMatrixData(dis_F3)
 mean_1, vectors = c.PCACompute(dF1, mean= None)
 mean_2, vectors = c.PCACompute(dF2, mean= None)
 mean_3, vectors = c.PCACompute(dF3, mean= None)
-c.imshow("Task 4.1-woman", mean_1.reshape(1090, 1050, 3))
-c.imshow("Task 4.1-boy", mean_2.reshape(1556, 1600, 3))
-c.imshow("Task 4.1-man", mean_3.reshape(1090, 1050, 3))
+c.imshow("Task 4.1-woman", mean_1.astype(np.uint8).reshape(1090, 1050, 3))
+c.imshow("Task 4.1-boy", mean_2.astype(np.uint8).reshape(1556, 1600, 3))
+c.imshow("Task 4.1-man", mean_3.astype(np.uint8).reshape(1090, 1050, 3))
 
 # get the eigenvectors, values
 womanPCA = computePCA(dF1).reshape(1090, 1050, 3)

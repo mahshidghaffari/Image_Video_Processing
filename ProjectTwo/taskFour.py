@@ -52,9 +52,9 @@ mean_a, eigVec_a = cv2.PCACompute(data_a, mean=None)
 mean_b, eigVec_b = cv2.PCACompute(data_b, mean=None)
 mean_c, eigVec_c = cv2.PCACompute(data_c, mean=None)
 
-cv2.imshow("Task 4.1 => Image 1", mean_a.reshape((1280, 853, 3)))
-cv2.imshow("Task 4.1 => Image 2", mean_b.reshape((1280, 853, 3)))
-cv2.imshow("Task 4.1 => Image 3", mean_c.reshape((960, 1280, 3)))
+cv2.imshow("Task 4.1 => Image 1", mean_a.astype(np.uint8).reshape((1280, 853, 3)))
+cv2.imshow("Task 4.1 => Image 2", mean_b.astype(np.uint8).reshape((1280, 853, 3)))
+cv2.imshow("Task 4.1 => Image 3", mean_c.astype(np.uint8).reshape((960, 1280, 3)))
 
 # Task 4.2 - Reconstruct each face
 weights_a = getWeights(data_a, eigVec_a, mean_a)
