@@ -26,7 +26,6 @@ def getEigFace(eigVec, wights, mean):
 var_one = []
 for pic in glob.glob("asset/faces/1/*.jpg"):
     var_one.append(cv2.imread(pic))
-    # print(cv2.imread(pic).shape)
 
 # man pictures
 var_two = []
@@ -37,9 +36,6 @@ for pic in glob.glob("asset/faces/2/*.jpg"):
 var_three = []
 for pic in glob.glob("asset/faces/3/*.jpg"):
     var_three.append(cv2.imread(pic))
-
-# getting image differences
-
 
 # Task 4.1 -  Find the eigen faces for each image
 # convert all image to row

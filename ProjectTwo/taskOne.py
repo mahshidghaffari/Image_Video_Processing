@@ -1,7 +1,6 @@
 import cv2;
-import imageio
 import matplotlib.pyplot as plt
-from PIL import Image, ImageFilter
+from skimage.util import random_noise
 
 import numpy as np
 
@@ -9,114 +8,136 @@ import numpy as np
 BGRImage = cv2.imread("asset/bird.jpg")
 RGBImage = cv2.cvtColor(BGRImage, cv2.COLOR_BGR2RGB).astype(np.double)
 grey = cv2.cvtColor(BGRImage, cv2.COLOR_BGR2GRAY).astype(np.double)
-fig, ax = plt.subplots(3, 2, sharex='col', sharey='row')
-fig.suptitle('TasK One')
-a = 0.08
-b = 0.08
+
+a = 5
+b = 5
 
 # Degrading the image and adding noise:
 # --------------------------------------------------------------------------------
-# Task One:  motion blurring
-F = np.fft.fft2(RGBImage)
-n2, n1 = BGRImage.shape[:2]
-[u, v] = np.mgrid[-n2 / 2:n2 / 2, -n1 / 2:n1 / 2]
+# Task 1.1.1:  motion blurring
+img = BGRImage / 255
+n2, n1 = img.shape[:2]
+[u, v] = np.mgrid[-round(n2 / 2):round(n2 / 2), -round(n1 / 2):round(n1 / 2)]
 u = 2 * u / n2
 v = 2 * v / n1
-blueF = F[:, :, 0]
-greenF = F[:, :, 1]
-redF = F[:, :, 2]
+
 # Blurring function.
 H = np.sinc((u * a + v * b)) * np.exp(-1j * np.pi * (u * a + v * b))
-G = F
-G[:, :, 0] = np.multiply(blueF, H)
-G[:, :, 1] = np.multiply(greenF, H)
-G[:, :, 2] = np.multiply(redF, H)
-Gp = np.fft.ifft2(G)
-# Gp = np.fft.fftshift(np.fft.fft2(Gp)) comment email
-blurry = abs(Gp) / 255
+F = np.fft.fftshift(np.fft.fft2(img))
+
+Fb = np.fft.fftshift(np.fft.fft2(img[:, :, 0]))
+Fg = np.fft.fftshift(np.fft.fft2(img[:, :, 1]))
+Fr = np.fft.fftshift(np.fft.fft2(img[:, :, 2]))
+
+Gb = np.multiply(Fb, H)
+Gg = np.multiply(Fg, H)
+Gr = np.multiply(Fr, H)
+
+gb = np.abs(np.fft.ifft2(Gb))
+gg = np.abs(np.fft.ifft2(Gg))
+gr = np.abs(np.fft.ifft2(Gr))
+blurry = cv2.merge((gb, gg, gr))
 
 # --------------------------------------------------------------------------------
-# Task Two: Gaussian noise
-mean = 0
-var = 0.08
-std = var ** 0.5
-gaus_noise = np.random.normal(mean, std, blurry.shape)
-gaus_noise = gaus_noise.reshape(blurry.shape)
-noise_img = blurry + gaus_noise
-noise_img = noise_img * 255
-
+# Task 1.1.2: Gaussian noise
+blu_gau_img = random_noise(blurry, 'gaussian', mean=0, var=0.03)
 # --------------------------------------------------------------------------------
-# Task Three:
-ax[0, 0].set_title("Motion Blurring")
-ax[0, 0].imshow(blurry)
-ax[0, 1].set_title("Gaussian Noise")
-ax[0, 1].imshow(noise_img.astype(np.uint8))
+# Task 1.1.3:
 
+cv2.imshow("Motion Blurry Image", blurry)
+cv2.imshow("Motion Blur and Gaussian noise", blu_gau_img)
+#
 # Removing noise:
 # --------------------------------------------------------------------------------
-# Task One:  inverse filtering Blurry image
+# Task 1.2.1:  inverse filtering Blurry image
 # ref: https://stackoverflow.com/questions/7894094/am-i-using-numpy-to-calculate-the-inverse-filter-correctly
 
-G_inverse_blurry = np.fft.fft2(blurry)
-G_inverse_blurry[:, :, 0] = np.divide(blueF, H)
-G_inverse_blurry[:, :, 1] = np.divide(greenF, H)
-G_inverse_blurry[:, :, 2] = np.divide(redF, H)
-Gp_inverse_blurry = np.fft.ifft2(G_inverse_blurry)
-blurry_inverse = abs(Gp_inverse_blurry) / 255
-ax[1, 0].set_title("Inverse filtering Blurry")
-ax[1, 0].imshow(blurry_inverse)
+reFb_1 = np.fft.fftshift(np.fft.fft2(blurry[:, :, 0])) / Fb
+reFg_1 = np.fft.fftshift(np.fft.fft2(blurry[:, :, 1])) / Fg
+reFr_1 = np.fft.fftshift(np.fft.fft2(blurry[:, :, 2])) / Fr
+
+reGb_1 = np.divide(reFb_1, H)
+reGg_1 = np.divide(reFg_1, H)
+reGr_1 = np.divide(reFr_1, H)
+
+deGb_1 = np.abs(np.fft.ifft2(reGb_1))
+deGg_1 = np.abs(np.fft.ifft2(reGg_1))
+deGr_1 = np.abs(np.fft.ifft2(reGr_1))
+denoise_blurry_gauss = cv2.merge((deGb_1, deGg_1, deGr_1))
+cv2.imshow("Blurry Inverse", blu_gau_img)
+# --------------------------------------------------------------------------------
+# Task 1.2.2:  inverse filtering Blurry image and Noisy
+
+reFb_2 = np.fft.fftshift(np.fft.fft2(blu_gau_img[:, :, 0])) / Fb
+reFg_2 = np.fft.fftshift(np.fft.fft2(blu_gau_img[:, :, 1])) / Fg
+reFr_2 = np.fft.fftshift(np.fft.fft2(blu_gau_img[:, :, 2])) / Fr
+
+reGb_2 = np.divide(reFb_2, H)
+reGg_2 = np.divide(reFg_2, H)
+reGr_2 = np.divide(reFr_2, H)
+
+deGb_2 = np.abs(np.fft.ifft2(reGb_2))
+deGg_2 = np.abs(np.fft.ifft2(reGg_2))
+deGr_2 = np.abs(np.fft.ifft2(reGr_2))
+denoise_blurry_gauss = cv2.merge((deGb_2, deGg_2, deGr_2))
+cv2.imshow("Blurry and Gaussian Inverse", denoise_blurry_gauss)
 
 # --------------------------------------------------------------------------------
-# Task two:  inverse filtering Blurry image and Noisy
+# Task 1.2.3:  MMSE Filter for additive noise
+gau_img = random_noise(img, 'gaussian', mean=0, var=0.03)
+gau_img = cv2.normalize(gau_img, None)
 
-G_inverse_blurry_noisy = np.fft.fft2(noise_img)
-G_inverse_blurry_noisy[:, :, 0] = np.divide(noise_img[:, :, 0], H) - np.divide(blueF, H)
-G_inverse_blurry_noisy[:, :, 1] = np.divide(noise_img[:, :, 1], H) - np.divide(greenF, H)
-G_inverse_blurry_noisy[:, :, 2] = np.divide(noise_img[:, :, 2], H) - np.divide(redF, H)
-noisy_blurry_inverse = abs(np.fft.ifft2(G_inverse_blurry_noisy)) / 255
-noisy_blurry_inverse = (blurry_inverse * 255).astype(np.uint8)
-ax[1, 1].set_title("Inverse filtering Blurry and Noisy")
-ax[1, 1].imshow(noisy_blurry_inverse)
+oG_1 = np.fft.fftshift(np.fft.fft2(gau_img[:, :, 0]))
+oG_2 = np.fft.fftshift(np.fft.fft2(gau_img[:, :, 1]))
+oG_3 = np.fft.fftshift(np.fft.fft2(gau_img[:, :, 2]))
+
+nn = img - gau_img
+
+sG_b = abs(np.fft.fftshift(np.fft.fft2(nn[:, :, 0]))) ** 2
+sG_g = abs(np.fft.fftshift(np.fft.fft2(nn[:, :, 1]))) ** 2
+sG_r = abs(np.fft.fftshift(np.fft.fft2(nn[:, :, 2]))) ** 2
+
+xG_b = abs(Fb) ** 2
+xG_g = abs(Fg) ** 2
+xG_r = abs(Fr) ** 2
+
+dh1 = np.abs(1) ** 2 + (sG_b / xG_b)
+dh2 = np.abs(1) ** 2 + (sG_g / xG_g)
+dh3 = np.abs(1) ** 2 + (sG_r / xG_r)
+
+Hw1 = np.conj(1) / dh1
+Hw2 = np.conj(1) / dh2
+Hw3 = np.conj(1) / dh3
+
+R1 = Hw1 * Gb
+R2 = Hw2 * Gg
+R3 = Hw3 * Gr
+a1 = np.abs(np.fft.ifft2(R1))
+a2 = np.abs(np.fft.ifft2(R2))
+a3 = np.abs(np.fft.ifft2(R3))
+MMSEFilter_additive_noise = cv2.merge((a1, a2, a3))
+cv2.imshow("MMSE filter for additive noise ", MMSEFilter_additive_noise)
 
 # --------------------------------------------------------------------------------
-# Task two:  MMSE Filter
+# Task 1.2.4:  MMSE Filter for motion blur and additive noise
 
-def add_gaussian_noise(image, mean=0, std=1):
-    gaus_noise = np.random.normal(mean, std, image.shape)
-    image = image.astype("int16")
-    noise_img = image + gaus_noise
-    return noise_img
+neImg = img - blu_gau_img
+blu_gau_img_X = abs(np.fft.fftshift(np.fft.fft2(neImg)))
+snnB1 = abs(blu_gau_img_X) ** 2
+sxxB1 = abs(F) ** 2
+blu_gau_img_qua = np.fft.fftshift(np.fft.fft2(blu_gau_img))
+IB1 = blu_gau_img_qua / blu_gau_img_X
+K = np.mean((snnB1 / sxxB1))
+dhB1 = np.abs(IB1) ** 2 + K
+HwB1 = np.conj(IB1) / dhB1
+RB1 = HwB1[:, :, 0] * Gb
+RB2 = HwB1[:, :, 1] * Gg
+RB3 = HwB1[:, :, 2] * Gr
+aB1 = np.abs(np.fft.ifft2(RB1))
+aB2 = np.abs(np.fft.ifft2(RB2))
+aB3 = np.abs(np.fft.ifft2(RB3))
+MMSEFilter_blur_noise = cv2.merge((aB1, aB2, aB3))
+cv2.imshow("MMSE filter for additive noise and motion blur", MMSEFilter_blur_noise)
 
-
-
-
-Hp2 = H * np.conj(H)
-test = Gp * np.conj(Gp)
-Sn = gaus_noise * np.conj(gaus_noise)
-Sf = F + np.conj(F)
-
-one = np.multiply(H, Hp2)
-G3 = F
-G3[:, :, 0] = np.multiply(blueF, one)
-G3[:, :, 1] = np.multiply(greenF, one)
-G3[:, :, 2] = np.multiply(redF, one)
-
-one = np.fft.ifft2(G3)
-two = np.divide(Sn, Sf)
-
-
-Hw = np.divide(Gp * np.conj(Gp), one + 0)
-Hw = np.abs(np.fft.ifft2(Hw)) / 255
-
-ax[2, 0].set_title("MMSE Filter")
-ax[2, 0].imshow(add_gaussian_noise(RGBImage.astype(np.uint8)))
-
-plt.show()
-
-
-def add_gaussian_noise(image, mean=0, std=1):
-    gaus_noise = np.random.normal(mean, std, image.shape)
-    image = image.astype("int16")
-    noise_img = image + gaus_noise
-    # image = ceil_floor_image(image)
-    return noise_img
+cv2.waitKey(0)
+cv2.destroyAllWindows()

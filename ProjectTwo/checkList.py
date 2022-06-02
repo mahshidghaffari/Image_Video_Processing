@@ -1,93 +1,122 @@
-import glob
-
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+from skimage.util import random_noise
 
+img = cv2.imread("asset/bird.jpg")
+# img = cv2.normalize(img, None)
+# img = cv2.cvtColor(imgB, cv2.COLOR_BGR2RGB).astype(np.double)
+img = img / 255
 
-def getDataMatrix(variations):
-    # make all images a row and add it to a matrix and return
-    data_matrix = np.matrix([img.flatten() for img in variations])
-    return data_matrix
+a = 3
+b = 4
+n2, n1, n0 = img.shape
+[u, v] = np.mgrid[-round(n2 / 2):round(n2 / 2), -round(n1 / 2):round(n1 / 2)]
+u = 2 * u / n2
+v = 2 * v / n1
+# H given for adding blur
+H = np.sinc((u * a + v * b)) * np.exp(-1j * np.pi * (u * a + v * b))
+F1 = np.fft.fftshift(np.fft.fft2(img[:, :, 0]))
+F2 = np.fft.fftshift(np.fft.fft2(img[:, :, 1]))
+F3 = np.fft.fftshift(np.fft.fft2(img[:, :, 2]))
 
+G1 = np.multiply(F1, H)
+G2 = np.multiply(F2, H)
+G3 = np.multiply(F3, H)
 
-def findEigVMean(data_matrix):
-    # calculating covariance matrix and output eigenvalues and eigenvectors of the latter
-    mean, eigen_vec = cv2.PCACompute(data_matrix, mean=None)
-    return mean, eigen_vec
+g1 = np.abs(np.fft.ifft2(G1))
+g2 = np.abs(np.fft.ifft2(G2))
+g3 = np.abs(np.fft.ifft2(G3))
 
+g = cv2.merge((g1, g2, g3))  # blue image
+# reverse the blur
+s1 = np.fft.fftshift(np.fft.fft2(g[:, :, 0]))
+s2 = np.fft.fftshift(np.fft.fft2(g[:, :, 1]))
+s3 = np.fft.fftshift(np.fft.fft2(g[:, :, 2]))
 
-# def findEigFaces(eigen_vec):
-#     # get eigen faces from eigen vectors
-#     eigen_faces = []
-#     for i in range(eigen_vec.shape[0]):
-#         eig = eigen_vec[i].reshape(6000, 4000, 3)
-#         eigen_faces.append(eig)
-#     return eigen_faces
-#
+I1 = s1 / F1
+I2 = s2 / F2
+I3 = s3 / F3
 
-# def getAvgFace(mean):
-#     # calculate average face from mean
-#     avg_face = mean.astype(np.uint8).reshape((6000, 4000, 3))
-#     return avg_face
+D1 = np.divide(s1, I1)
+D2 = np.divide(s2, I2)
+D3 = np.divide(s3, I3)
 
+d1 = np.abs(np.fft.ifft2(D1))
+d2 = np.abs(np.fft.ifft2(D2))
+d3 = np.abs(np.fft.ifft2(D3))
 
-# # website formula
-def getWeight(img, eig_vec, mean):
-    # calculate the weight for each image
-    img = np.squeeze(np.asarray(img), axis=0)
-    m = img - mean
-    weight = np.dot(m, eig_vec)
-    return weight
+d = cv2.merge((d1, d2, d3))
 
+l = random_noise(g, 'gaussian', mean=0, var=0.03)
+l = cv2.normalize(l, None)
+q1 = np.fft.fftshift(np.fft.fft2(l[:, :, 0]))
+q2 = np.fft.fftshift(np.fft.fft2(l[:, :, 1]))
+q3 = np.fft.fftshift(np.fft.fft2(l[:, :, 2]))
+I1 = q1 / F1
+I2 = q2 / F2
+I3 = q3 / F3
+Q1 = np.divide(q1, I1)
+Q2 = np.divide(q2, I2)
+Q3 = np.divide(q3, I3)
+p1 = np.abs(np.fft.ifft2(Q1))
+p2 = np.abs(np.fft.ifft2(Q2))
+p3 = np.abs(np.fft.ifft2(Q3))
+P = cv2.merge((p1, p2, p3))
+# --------------------------------------------------------------------------------
+k = random_noise(img, 'gaussian', mean=0, var=0.05)
+k = cv2.normalize(k, None)
+o1 = np.fft.fftshift(np.fft.fft2(k[:, :, 0]))
+o2 = np.fft.fftshift(np.fft.fft2(k[:, :, 1]))
+o3 = np.fft.fftshift(np.fft.fft2(k[:, :, 2]))
+nn = img - k
+snn1 = abs(np.fft.fftshift(np.fft.fft2(nn[:, :, 0]))) ** 2
+snn2 = abs(np.fft.fftshift(np.fft.fft2(nn[:, :, 1]))) ** 2
+snn3 = abs(np.fft.fftshift(np.fft.fft2(nn[:, :, 2]))) ** 2
+sxx1 = abs(F1) ** 2
+sxx2 = abs(F2) ** 2
+sxx3 = abs(F3) ** 2
+I1 = 1
+I2 = 1
+I3 = 1
+dh1 = np.abs(I1) ** 2 + (snn1 / sxx1)
+dh2 = np.abs(I2) ** 2 + (snn2 / sxx2)
+dh3 = np.abs(I3) ** 2 + (snn3 / sxx3)
+Hw1 = np.conj(I1) / dh1
+Hw2 = np.conj(I2) / dh2
+Hw3 = np.conj(I3) / dh3
+R1 = Hw1 * G1
+R2 = Hw2 * G2
+R3 = Hw3 * G3
+a1 = np.abs(np.fft.ifft2(R1))
+a2 = np.abs(np.fft.ifft2(R2))
+a3 = np.abs(np.fft.ifft2(R3))
+A = cv2.merge((a1, a2, a3))
+# =============================================================================
+nnB = img - l
+xx = np.fft.fftshift(np.fft.fft2(nnB))
+snnB1 = abs(xx) ** 2
+F = np.fft.fftshift(np.fft.fft2(img))
+sxxB1 = abs(F) ** 2
+qq = np.fft.fftshift(np.fft.fft2(l))
+IB1 = qq / xx
+K = np.mean((snnB1 / sxxB1))
+dhB1 = np.abs(IB1) ** 2 + K
+HwB1 = np.conj(IB1) / dhB1
+RB1 = HwB1[:, :, 0] * G1
+RB2 = HwB1[:, :, 1] * G2
+RB3 = HwB1[:, :, 2] * G3
+aB1 = np.abs(np.fft.ifft2(RB1))
+aB2 = np.abs(np.fft.ifft2(RB2))
+aB3 = np.abs(np.fft.ifft2(RB3))
+AB = cv2.merge((aB1, aB2, aB3))
 
-def getWeights(data_matrix, eig_vec, mean):
-    # calculate all the weights
-    weights = []
-    for i in range(data_matrix.shape[0]):
-        weights.append(getWeight(data_matrix[i], eig_vec[i], mean))
-    return weights
-
-
-def reconstructImage(variations):
-    # make new image given variations
-    data_matrix = getDataMatrix(variations)
-    mean, eig_vec = findEigVMean(data_matrix)
-    weights = getWeights(data_matrix, eig_vec, mean)
-    s_eig_faces = eig_vec * weights
-    s_eig_faces = s_eig_faces.sum()
-    new_face = s_eig_faces + mean
-    return new_face.astype(np.uint8).reshape((6000, 4000, 3))
-
-
-def reconstructImageDif(variations1, variations2):
-    data_matrix_one = getDataMatrix(variations1)
-    data_matrix_two = getDataMatrix(variations2)
-    mean, x = findEigVMean(data_matrix_one)
-    y, eig_vec = findEigVMean(data_matrix_two)
-    weights = getWeights(data_matrix_two, eig_vec, mean)
-    s_eigfaces = eig_vec * weights
-    s_eigfaces = s_eigfaces.sum()
-    newFace = s_eigfaces + mean
-    return newFace.astype(np.uint8).reshape((6000, 4000, 3))
-
-
-variation_K = []
-for img in glob.glob("asset/faces/1/*.jpg"):
-    variation_K.append(cv2.imread(img))
-
-variation_O = []
-for img in glob.glob("asset/faces/2/*.jpg"):
-    variation_O.append(cv2.imread(img))
-
-variation_W = []
-for img in glob.glob("asset/faces/3/*.jpg"):
-    variation_W.append(cv2.imread(img))
-
-
-variation_K_Some = [variation_K[0], variation_K[1]]
-# img2 = reconstructImage(variation_K_Some)
-img1 = reconstructImageDif(variation_K, variation_O)
-cv2.imshow("Image1", img1)
-# cv2.imshow("Image2", img2)
+cv2.imshow("blue", g)
+cv2.imshow("deblue", d / np.max(d))
+cv2.imshow("denoise", P / np.max(P))
+cv2.imshow("noise&blur", l / np.max(l))
+cv2.imshow("noise", k / np.max(k))
+cv2.imshow("MMSE", A / np.max(A))
+cv2.imshow("MMSE  B", AB / np.max(AB))
 cv2.waitKey(0)
 cv2.destroyAllWindows()
