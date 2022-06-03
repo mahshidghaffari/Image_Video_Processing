@@ -63,14 +63,18 @@ newFace_c = getEigFace(eigVec_c, weights_c, mean_c)
 
 cv2.imshow("Task 4.2 => Image 1", newFace_a.reshape((1280, 853, 3)))
 cv2.imshow("Task 4.2 => Image 2", newFace_b.reshape((1280, 853, 3)))
-cv2.imshow("Task 4.2 => Image 3", newFace_c.reshape((960, 1280, 3)))
+# cv2.imshow("Task 4.2 => Image 3", newFace_c.reshape((960, 1280, 3)))
 
 
 # Task 4.3 Reconstruct each face using ’wrong’ PCA weights:
-ws_diff = getWeights(data_b, eigVec_b, mean_a)
-newFace_diff = getEigFace(eigVec_b, ws_diff, mean_a)
-img = newFace_diff.reshape(1280, 853, 3)
-cv2.imshow("Task 4.3 => Image diff", newFace_c.reshape((960, 1280, 3)))
+ws_diff_1 = getWeights(data_a, eigVec_a, mean_b)
+newFace_diff_1 = getEigFace(eigVec_a, ws_diff_1, mean_b)
+cv2.imshow("Task 4.3 => Image diff 1", newFace_diff_1.reshape((1280, 853, 3)))
+
+# Task 4.3 Reconstruct each face using ’wrong’ PCA weights:
+ws_diff_2 = getWeights(data_a, eigVec_b, mean_a)
+newFace_diff_2 = getEigFace(eigVec_b, ws_diff_2, mean_a)
+cv2.imshow("Task 4.3 => Image diff 2", newFace_diff_2.reshape((1280, 853, 3)))
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
